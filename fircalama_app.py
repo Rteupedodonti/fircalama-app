@@ -10,7 +10,7 @@ import random
 # Firebase'ı başlat (secrets içinden)
 if not firebase_admin._apps:
     cred_dict = st.secrets["firebase"]
-    cred = credentials.Certificate(dict(cred_dict))
+    cred = credentials.Certificate(cred_dict)  # ✅ DÜZELTİLDİ
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
