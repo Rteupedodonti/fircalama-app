@@ -7,10 +7,13 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import random
 
-# Firebase json'ı Streamlit secrets üzerinden al
-cred_dict = st.secrets["gizli"]
-cred = credentials.Certificate(cred_dict)
-firebase_admin.initialize_app(cred)
+# Firebase'ı başlat (secrets içinden)
+if not firebase_admin._apps:
+    cred_dict = st.secrets["firebase"]
+    cred = credentials.Certificate(dict(cred_dict))
+    firebase_admin.initialize_app(cred)
+
+db = firestore.client()
 
 # Firebase başlat
 if not firebase_admin._apps:
