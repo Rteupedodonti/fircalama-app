@@ -15,12 +15,6 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
-# Firebase başlat
-if not firebase_admin._apps:
-    cred = credentials.Certificate("dis-fircalama-app-firebase-adminsdk-fbsvc-af7849ab58.json")
-    firebase_admin.initialize_app(cred)
-
-db = firestore.client()
 
 # Sayfa ayarı
 st.set_page_config(page_title="Diş Fırçalama Takip", layout="centered")
