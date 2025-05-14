@@ -8,6 +8,10 @@ from dateutil.relativedelta import relativedelta
 import random
 import os  # Import the 'os' module
 
+
+# Sayfa ayarı
+st.set_page_config(page_title="Diş Fırçalama Takip", layout="centered")
+
 # Firebase'ı başlat (secrets içinden)
 if not firebase_admin._apps:
     try:
@@ -22,8 +26,6 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
-# Sayfa ayarı
-st.set_page_config(page_title="Diş Fırçalama Takip", layout="centered")
 
 # Renk teması
 st.markdown("""
