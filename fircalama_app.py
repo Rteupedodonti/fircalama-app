@@ -52,7 +52,9 @@ for doc in docs:
     veri[doc.id] = doc.to_dict()
 
 cocuklar = list(veri.keys())
-secilen_cocuk = st.session_state.get("aktif_cocuk")
+if "aktif_cocuk" not in st.session_state:
+    st.session_state["aktif_cocuk"] = None
+secilen_cocuk = st.session_state["aktif_cocuk"]
 
 # Üstte avatar ve isim göster
 if sayfa not in ["👶 Çocuk Seç veya Ekle", "🔒 Admin"] and secilen_cocuk in veri:
@@ -93,7 +95,6 @@ def max_ust_uste_gun(kayitlar):
     tarih_listesi = sorted(kayitlar.keys())
     max_seri = 0
     seri = 0
-    onceki_tarih = None
     for tarih in tarih_listesi:
         bilgi = kayitlar[tarih]
         # 🔒 sadece sözlük ise devam et
@@ -156,7 +157,10 @@ if sayfa == "👶 Çocuk Seç veya Ekle":
                 with cols[1]:
                     if st.checkbox(f"{k} ({v['ay']}. ayda açılır)", key=k):
                         secilen_avatar = k
-
+            
+            if secilen_avatar and secilen_avatar in uygun_avatarlar:
+                pass  # Add your logic here
+                avatar_url = uygun_avatarlar[secilen_avatar].get("url", "")
             if secilen_avatar:
                 avatar_url = uygun_avatarlar[secilen_avatar]["url"]
 
@@ -242,7 +246,10 @@ if sayfa == "🏠 Giriş":
                     time.sleep(1)
                 st.markdown("<h2 style='text-align:center; color:green;'>✅ Süre doldu! Aferin!</h2>", unsafe_allow_html=True)
 
-        if st.button("✅ Kaydet"):
+            mevcut_veri = veri.get(secilen_cocuk, {})
+            if not isinstance(mevcut_veri, dict):
+                mevcut_veri = {}
+            mevcut_veri[tarih_str] = {"sabah": sabah, "aksam": aksam}
             mevcut_veri = veri.get(secilen_cocuk, {})
             mevcut_veri[tarih_str] = {"sabah": sabah, "aksam": aksam}
             db.collection("fircalama").document(secilen_cocuk).set(mevcut_veri)
@@ -255,6 +262,22 @@ if sayfa == "🏠 Giriş":
             baslangic_tarihi = kayitlar.get("baslangic_tarihi", datetime.today().strftime("%Y-%m-%d"))
             toplam_ay = hesapla_araliksiz_ay(baslangic_tarihi, kayitlar)
 
+            # Define rozetler if not already defined
+            rozetler = [
+                (18, "🏆 1.5 Yıllık Şampiyon Rozeti (18 ay)"),
+                (12, "🥇 1 Yıllık Altın Rozet (12 ay)"),
+                (11, "🥈 11 Aylık Gümüş Rozet"),
+                (10, "🥉 10 Aylık Bronz Rozet"),
+                (9, "🌟 9 Aylık Yıldız Rozet"),
+                (8, "🌼 8 Aylık Çiçek Rozet"),
+                (7, "🌈 7 Aylık Gökkuşağı Rozet"),
+                (6, "🔥 6 Aylık Ateş Rozet"),
+                (5, "💎 5 Aylık Elmas Rozet"),
+                (4, "🍀 4 Aylık Şans Rozet"),
+                (3, "🎉 3 Aylık Kutlama Rozet"),
+                (2, "✨ 2 Aylık Parıltı Rozet"),
+                (1, "🌟 1 Aylık Başlangıç Rozet")
+            ]
             kazanilan_rozetler = [rozet for ay, rozet in rozetler if toplam_ay >= ay]
             if kazanilan_rozetler:
                 son_kazanilan_rozet = kazanilan_rozetler[0]
@@ -348,12 +371,11 @@ if sayfa == "🎁 Avatar Koleksiyonu":
     else:
         kayitlar = veri.get(secilen_cocuk, {})
         aktif_ay = hesapla_araliksiz_ay(kayitlar.get("baslangic_tarihi", datetime.today().strftime("%Y-%m-%d")), kayitlar)
-        cinsiyet = veri.get(secilen_cocuk, {}).get("cinsiyet", "kiz") or "kiz"
+        cinsiyet = veri[secilen_cocuk].get("cinsiyet", "kiz")
 
         avatarlar = {}
         for c in [cinsiyet, "ortak"]:
-            if c:  # boş değilse hata almayız
-                doc = db.collection("avatarlar").document(c).get()
+            doc = db.collection("avatarlar").document(c).get()
             if doc.exists:
                 avatarlar.update(doc.to_dict())
 
@@ -407,8 +429,8 @@ if "aktif_cocuk" in st.session_state and st.session_state["aktif_cocuk"] == "adm
                         avatar_adi: {"url": avatar_url, "ay": acilan_ay}
                     }, merge=True)
                     st.success(f"{avatar_adi} başarıyla eklendi! {acilan_ay}. ayda açılacak.")
-                else:
-                    st.warning("Lütfen tüm alanları doldurun.")
+            mevcut_avatarlar = db.collection("avatarlar").document(cinsiyet).get().to_dict() or {}
+            mevcut_avatarlar = db.collection("avatarlar").document(cinsiyet).get().to_dict() or {}
 
             st.markdown("---")
             mevcut_avatarlar = db.collection("avatarlar").document(cinsiyet).get().to_dict() or {}
