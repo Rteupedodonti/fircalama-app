@@ -476,7 +476,7 @@ if sayfa == "🎁 Avatar Koleksiyonu":
             st.warning("Hiç avatar bulunamadı.")
 
 # 🔒 ADMIN PANELİ
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")  # Retrieve from environment variable
+ADMIN_PASSWORD = os.environ.get("firca123")  # Retrieve from environment variable
 
 if "aktif_cocuk" in st.session_state and st.session_state["aktif_cocuk"] == "admin":
     if sayfa == "🔒 Admin":
