@@ -12,7 +12,7 @@ import os  # Import the 'os' module
 if not firebase_admin._apps:
     try:
         import json
-        cred_dict = json.loads(json.dumps(st.secrets["firebase"]))  # ✅ BU SATIR YENİ
+        cred_dict = dict(st.secrets["firebase"])  # ✅ BU SATIR DÜZELTİLDİ
         cred = credentials.Certificate(cred_dict)
         firebase_admin.initialize_app(cred)
         st.success("Firebase initialized successfully!")  # opsiyonel başarı mesajı
@@ -21,7 +21,6 @@ if not firebase_admin._apps:
         st.stop()  # Stop execution if Firebase fails to initialize
 
 db = firestore.client()
-
 
 # Sayfa ayarı
 st.set_page_config(page_title="Diş Fırçalama Takip", layout="centered")
