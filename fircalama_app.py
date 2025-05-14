@@ -97,14 +97,6 @@ def hesapla_araliksiz_ay(baslangic, kayitlar):
             else:
                 break
 
-        # Son fırçalama tarihini kontrol et ve 3 gün kuralını uygula
-        son_fircalama_tarihi = son_fircalama_tarihi_bul(kayitlar)
-        if son_fircalama_tarihi:
-            son_tarih = datetime.strptime(son_fircalama_tarihi, "%Y-%m-%d").date()
-            fark = (datetime.now().date() - son_tarih).days
-            if fark > 3:
-                st.warning("Son 3 gündür fırçalamadığınız için aralıksız fırçalama sayacınız sıfırlandı!")
-                return 0  # Sıfırla
         return ay_sayaci
     except Exception as e:
         st.error(f"Error in hesapla_araliksiz_ay: {e}")
@@ -143,6 +135,16 @@ def son_fircalama_tarihi_bul(kayitlar):
         if isinstance(bilgi, dict) and bilgi.get("sabah") == "evet" and bilgi.get("aksam") == "evet":
             return tarih
     return None
+
+# --- Başarımları sıfırla ---
+def basarimlari_sifirla(secilen_cocuk):
+    try:
+        db.collection("fircalama").document(secilen_cocuk).update({
+            "baslangic_tarihi": datetime.today().strftime("%Y-%m-%d")
+        })
+        st.success("Tüm başarımlar sıfırlandı!")
+    except Exception as e:
+        st.error(f"Başarımları sıfırlama hatası: {e}")
 
 # 👶 ÇOCUK SEÇ VEYA EKLE
 if sayfa == "👶 Çocuk Seç veya Ekle":
@@ -268,7 +270,6 @@ if sayfa == "📊 Profilim" and secilen_cocuk:
             })
         )
 
-
 # 🏠 GİRİŞ SAYFASI
 if sayfa == "🏠 Giriş":
     st.title("📋 Yeni Kayıt Girişi")
@@ -276,6 +277,22 @@ if sayfa == "🏠 Giriş":
     if not secilen_cocuk:
         st.warning("Lütfen önce bir çocuk seçin.")
     else:
+        # 3 gün fırçalama uyarısı (Giriş sayfasında)
+        kayitlar = veri.get(secilen_cocuk, {})
+        if not isinstance(kayitlar, dict):
+            kayitlar = {}
+
+        son_fircalama_tarihi = son_fircalama_tarihi_bul(kayitlar)
+        if son_fircalama_tarihi:
+            son_tarih = datetime.strptime(son_fircalama_tarihi, "%Y-%m-%d").date()
+            fark = (datetime.now().date() - son_tarih).days
+            if fark > 3:
+                st.error(
+                    "Son 3 gündür dişlerini fırçalamadığın için aralıksız fırçalama sayacın sıfırlandı! "
+                    "Tüm başarımların gitti :("
+                )
+                basarimlari_sifirla(secilen_cocuk)
+
         tarih = st.date_input("Tarih:", value=datetime.today())
         tarih_str = tarih.strftime("%Y-%m-%d")
         sabah = st.radio("Sabah fırçaladı mı?", ["evet", "hayır"], horizontal=True)
