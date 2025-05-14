@@ -11,10 +11,11 @@ import os  # Import the 'os' module
 # Firebase'ı başlat (secrets içinden)
 if not firebase_admin._apps:
     try:
-        cred_dict = st.secrets["firebase"]
+        import json
+        cred_dict = json.loads(json.dumps(st.secrets["firebase"]))  # ✅ BU SATIR YENİ
         cred = credentials.Certificate(cred_dict)
         firebase_admin.initialize_app(cred)
-        st.success("Firebase initialized successfully!")  # Add success message
+        st.success("Firebase initialized successfully!")  # opsiyonel başarı mesajı
     except Exception as e:
         st.error(f"Firebase initialization failed: {e}")
         st.stop()  # Stop execution if Firebase fails to initialize
