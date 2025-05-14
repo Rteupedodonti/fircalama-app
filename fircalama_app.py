@@ -355,7 +355,7 @@ if sayfa == "🎁 Avatar Koleksiyonu":
             if c:  # boş değilse hata almayız
                 doc = db.collection("avatarlar").document(c).get()
             if doc.exists:
-                avatarlar.update(doc.to_dict()
+                avatarlar.update(doc.to_dict())
 
         if avatarlar:
             st.markdown(f"### {aktif_ay}. aya kadar açılan avatarlar")
