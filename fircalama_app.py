@@ -348,13 +348,14 @@ if sayfa == "🎁 Avatar Koleksiyonu":
     else:
         kayitlar = veri.get(secilen_cocuk, {})
         aktif_ay = hesapla_araliksiz_ay(kayitlar.get("baslangic_tarihi", datetime.today().strftime("%Y-%m-%d")), kayitlar)
-        cinsiyet = veri[secilen_cocuk].get("cinsiyet", "kiz")
+        cinsiyet = veri.get(secilen_cocuk, {}).get("cinsiyet", "kiz") or "kiz"
 
         avatarlar = {}
         for c in [cinsiyet, "ortak"]:
-            doc = db.collection("avatarlar").document(c).get()
-            if doc.exists:
-                avatarlar.update(doc.to_dict())
+    if c:  # boş değilse hata almayız
+        doc = db.collection("avatarlar").document(c).get()
+        if doc.exists:
+            avatarlar.update(doc.to_dict()
 
         if avatarlar:
             st.markdown(f"### {aktif_ay}. aya kadar açılan avatarlar")
