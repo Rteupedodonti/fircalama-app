@@ -8,8 +8,7 @@ from dateutil.relativedelta import relativedelta
 import random
 import os  # Import the 'os' module
 
-
-# Sayfa ayarı
+# Sayfa ayarı (EN BAŞA TAŞINDI)
 st.set_page_config(page_title="Diş Fırçalama Takip", layout="centered")
 
 # Firebase'ı başlat (secrets içinden)
@@ -25,7 +24,6 @@ if not firebase_admin._apps:
         st.stop()  # Stop execution if Firebase fails to initialize
 
 db = firestore.client()
-
 
 # Renk teması
 st.markdown("""
@@ -80,7 +78,7 @@ def hesapla_araliksiz_ay(baslangic, kayitlar):
     try:
         baslangic_tarih = datetime.strptime(baslangic, "%Y-%m-%d")
         bugun = datetime.today()
-        toplam_ay = (bugun.year - baslangic_tarih.year) * 12 + (bugun.month - baslangic_tarih.month) + 1
+        toplam_ay = (bugun.year - baslangic_tarih.year) * 12 + (bugun.month - baslangic_tarih.year) + 1
 
         ay_sayaci = 0
         for ay_index in range(toplam_ay):
@@ -98,6 +96,15 @@ def hesapla_araliksiz_ay(baslangic, kayitlar):
                 ay_sayaci += 1
             else:
                 break
+
+        # Son fırçalama tarihini kontrol et ve 3 gün kuralını uygula
+        son_fircalama_tarihi = son_fircalama_tarihi_bul(kayitlar)
+        if son_fircalama_tarihi:
+            son_tarih = datetime.strptime(son_fircalama_tarihi, "%Y-%m-%d").date()
+            fark = (datetime.now().date() - son_tarih).days
+            if fark > 3:
+                st.warning("Son 3 gündür fırçalamadığınız için aralıksız fırçalama sayacınız sıfırlandı!")
+                return 0  # Sıfırla
         return ay_sayaci
     except Exception as e:
         st.error(f"Error in hesapla_araliksiz_ay: {e}")
@@ -128,6 +135,14 @@ def max_ust_uste_gun(kayitlar):
         st.error(f"Error in max_ust_uste_gun: {e}")
         return 0
 
+# --- Son fırçalama tarihini bul ---
+def son_fircalama_tarihi_bul(kayitlar):
+    tarihler = sorted(kayitlar.keys(), reverse=True)
+    for tarih in tarihler:
+        bilgi = kayitlar.get(tarih, {})
+        if isinstance(bilgi, dict) and bilgi.get("sabah") == "evet" and bilgi.get("aksam") == "evet":
+            return tarih
+    return None
 
 # 👶 ÇOCUK SEÇ VEYA EKLE
 if sayfa == "👶 Çocuk Seç veya Ekle":
@@ -206,6 +221,11 @@ if sayfa == "📊 Profilim" and secilen_cocuk:
     kayitlar = veri.get(secilen_cocuk, {})
     if not isinstance(kayitlar, dict):
         kayitlar = {}
+
+    # Son fırçalama tarihini bul
+    son_fircalama_tarihi = son_fircalama_tarihi_bul(kayitlar)
+
+    # Aralıksız ay sayısını hesapla
     aktif_ay = hesapla_araliksiz_ay(kayitlar.get("baslangic_tarihi", datetime.today().strftime("%Y-%m-%d")), kayitlar)
     en_uzun = max_ust_uste_gun(kayitlar)
 
@@ -235,7 +255,6 @@ if sayfa == "📊 Profilim" and secilen_cocuk:
         by=["aktif_ay", "uzun_seri", "toplam_evet"],
         ascending=[False, False, False]
     ).reset_index(drop=True)
-    siralama_df.index += 1
     siralama_df["sıra"] = siralama_df.index
 
     with st.expander("👨‍👩‍👧 Diğer Katılımcılar Sıralaması"):
